@@ -15,7 +15,8 @@ export default function Timer({ timeRemaining }) {
 
   return (
     <div className={`timer-container ${isWarning ? "timer-warning" : ""}`} role="timer" aria-live="polite">
-      <span>⏱️ Time Remaining:</span>
+      <span className="timer-label-desktop">⏱️ Time Remaining:</span>
+      <span className="timer-label-mobile">⏱️</span>
       <span>{formatTime(timeRemaining)}</span>
     </div>
   );

@@ -803,6 +803,14 @@ a {
   animation: pulseWarning 1.5s infinite;
 }
 
+.timer-label-desktop {
+  display: inline;
+}
+
+.timer-label-mobile {
+  display: none;
+}
+
 @keyframes pulseWarning {
   0% { transform: scale(1); }
   50% { transform: scale(1.02); }
@@ -1682,29 +1690,26 @@ a {
     width: 100%;
   }
 
-  /* Quiz Action Toolbar Responsive Grid for Thumbs */
+  /* Quiz Action Toolbar Responsive Flex for Thumbs */
   .quiz-actions-toolbar {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
     padding: 0.75rem;
   }
 
   .toolbar-nav-group {
-    grid-column: span 2;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+    display: flex;
     gap: 0.5rem;
     width: 100%;
   }
 
   .nav-btn {
-    width: 100%;
+    flex: 1;
     min-height: 48px;
   }
 
   .toolbar-aux-group {
-    grid-column: span 2;
     display: flex;
     gap: 0.5rem;
     width: 100%;
@@ -1713,10 +1718,11 @@ a {
   .mark-btn, .clear-btn {
     flex: 1;
     min-height: 44px;
+    font-size: 0.85rem;
+    padding: 0.5rem;
   }
 
   .toolbar-submit-group {
-    grid-column: span 2;
     width: 100%;
   }
 
@@ -1725,6 +1731,14 @@ a {
     min-height: 50px;
     font-size: 1rem;
     font-weight: 700;
+  }
+
+  .timer-label-desktop {
+    display: none;
+  }
+
+  .timer-label-mobile {
+    display: inline;
   }
 
   .question-grid {

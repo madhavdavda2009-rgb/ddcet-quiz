@@ -3,8 +3,8 @@ import React, { useState } from "react";
 /**
  * QuestionNavigator Component
  * 
- * Renders the question palette grid, filter tabs, live stats,
- * and supports responsive desktop sidebar and mobile slide-in drawer.
+ * Palette grid, filter tabs, live stats, legend, and mobile slide-in drawer.
+ * Uses color + icons/borders/dots for accessible visual distinction.
  */
 export default function QuestionNavigator({
   questions,
@@ -64,19 +64,19 @@ export default function QuestionNavigator({
       {/* Legend / Stats Summary */}
       <div className="navigator-stats-summary">
         <div className="nav-stat-row">
-          <span className="legend-dot" style={{ background: "var(--success)", color: "#fff" }}>✓</span>
+          <span className="legend-dot dot-answered">✓</span>
           <span>Answered: {answeredCount + markedAndAnsweredCount}</span>
         </div>
         <div className="nav-stat-row">
-          <span className="legend-dot" style={{ background: "#fff", border: "1px solid var(--border-strong)", color: "var(--text-muted)" }}>•</span>
+          <span className="legend-dot dot-unanswered">•</span>
           <span>Unanswered: {unattemptedCount}</span>
         </div>
         <div className="nav-stat-row">
-          <span className="legend-dot" style={{ background: "var(--purple-light)", color: "var(--purple)", border: "1px solid var(--purple-border)" }}>★</span>
-          <span>Review: {markedCount + markedAndAnsweredCount}</span>
+          <span className="legend-dot dot-marked">★</span>
+          <span>In Review: {markedCount + markedAndAnsweredCount}</span>
         </div>
         <div className="nav-stat-row">
-          <span className="legend-dot" style={{ outline: "2px solid var(--primary)", background: "#fff", color: "var(--primary)" }}>◎</span>
+          <span className="legend-dot dot-current">◎</span>
           <span>Current: Q.{currentIndex + 1}</span>
         </div>
       </div>
@@ -111,12 +111,17 @@ export default function QuestionNavigator({
           const isMarked = !!markedQuestions[q.id];
 
           let stateClass = "";
+          let iconSymbol = null;
+
           if (isMarked && isAnswered) {
             stateClass = "marked-answered";
+            iconSymbol = "★";
           } else if (isMarked) {
             stateClass = "marked";
+            iconSymbol = "★";
           } else if (isAnswered) {
             stateClass = "answered";
+            iconSymbol = "✓";
           }
 
           if (isCurrent) {
@@ -132,7 +137,8 @@ export default function QuestionNavigator({
               title={`Question ${idx + 1} (${q.subject})`}
               aria-label={`Go to Question ${idx + 1}`}
             >
-              {idx + 1}
+              <span>{idx + 1}</span>
+              {iconSymbol && <span className="btn-icon-indicator">{iconSymbol}</span>}
             </button>
           );
         })}
@@ -147,7 +153,7 @@ export default function QuestionNavigator({
         {content}
       </aside>
 
-      {/* Mobile Modal / Drawer */}
+      {/* Mobile Drawer / Sheet */}
       {isMobileDrawerOpen && (
         <div className="mobile-drawer-backdrop" onClick={onCloseMobile} role="dialog" aria-modal="true">
           <div className="mobile-drawer-card" onClick={(e) => e.stopPropagation()}>
@@ -158,4 +164,3 @@ export default function QuestionNavigator({
     </>
   );
 }
-

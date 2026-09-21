@@ -1,9 +1,10 @@
 import React from "react";
+import HoldToConfirmButton from "./HoldToConfirmButton";
 
 /**
- * SubmitModal Component
+ * SubmitModal Component with 21st.dev Hold to Confirm submit protection
  * 
- * Submission confirmation modal with attempt summary metrics and mobile-optimized buttons.
+ * Submission confirmation modal with attempt summary metrics and hold-to-confirm button.
  */
 export default function SubmitModal({
   isOpen,
@@ -24,7 +25,7 @@ export default function SubmitModal({
         </h3>
         
         <p className="modal-description">
-          Please review your attempt summary before final submission. Once submitted, your score and detailed performance analytics will be calculated.
+          Please review your attempt summary before final submission. Hold the submit button to confirm your submission.
         </p>
 
         <div className="modal-summary-grid">
@@ -50,16 +51,15 @@ export default function SubmitModal({
           >
             Cancel & Return
           </button>
-          <button
-            type="button"
+          <HoldToConfirmButton
+            onConfirm={onConfirm}
+            label="Hold to Confirm Submit ➔"
+            confirmingLabel="Submitting Test..."
+            holdDurationMs={800}
             className="btn btn-success modal-btn"
-            onClick={onConfirm}
-          >
-            Yes, Submit Test ➔
-          </button>
+          />
         </div>
       </div>
     </div>
   );
 }
-

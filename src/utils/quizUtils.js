@@ -1,13 +1,15 @@
 /**
- * DDCET Practice Quiz Scoring and Helper Utilities
+ * DDCET Practice Quiz Pure Utilities
  * 
- * Pure JavaScript utility functions without side effects.
+ * Functions for question shuffling, scoring, time formatting, and answer mapping.
  */
+
+import { EXAM_CONFIG } from "../config/examConfig";
 
 /**
  * Standard Fisher-Yates shuffle algorithm (pure, returns new array)
  * @param {Array} array 
- * @returns {Array} Shuffled shallow copy
+ * @returns {Array} Shuffled copy
  */
 export function shuffleArray(array) {
   const arr = [...array];
@@ -38,15 +40,13 @@ export function getOptionIndex(letter) {
 }
 
 /**
- * Generates a dynamic set of questions with randomized order and randomized option choices.
- * Preserves reading passage groupings and DDCET subject modules.
+ * Generates dynamic or fixed question sets.
+ * When shuffleQuestions=false and shuffleOptions=false (Previous Year Paper Mode),
+ * exact original sequence and option order are preserved.
  * 
- * @param {Array} questionsList - Array of question objects
+ * @param {Array} questionsList 
  * @param {Object} options
- * @param {boolean} [options.shuffleQuestions=true] - Whether to randomize question sequence
- * @param {boolean} [options.shuffleOptions=true] - Whether to randomize option choices (A, B, C, D)
- * @param {boolean} [options.preserveSections=true] - Whether to preserve DDCET subject order while randomizing within each subject
- * @returns {Array} Freshly randomized question objects with remapped correct answer keys
+ * @returns {Array}
  */
 export function generateDynamicQuestions(questionsList, {
   shuffleQuestions = true,
@@ -55,12 +55,11 @@ export function generateDynamicQuestions(questionsList, {
 } = {}) {
   if (!questionsList || questionsList.length === 0) return [];
 
-  // Step 1: Shuffle questions
+  // Step 1: Sequence ordering
   let orderedQuestions = [];
 
   if (shuffleQuestions) {
     if (preserveSections) {
-      // Group by subject in their original appearance order
       const subjectGroups = new Map();
       questionsList.forEach((q) => {
         if (!subjectGroups.has(q.subject)) {
@@ -69,15 +68,12 @@ export function generateDynamicQuestions(questionsList, {
         subjectGroups.get(q.subject).push(q);
       });
 
-      // Shuffle within each subject group while keeping passage questions contiguous
       subjectGroups.forEach((groupQuestions) => {
         const passageQuestions = groupQuestions.filter((q) => q.hasPassage);
         const nonPassageQuestions = groupQuestions.filter((q) => !q.hasPassage);
-
         const shuffledNonPassage = shuffleArray(nonPassageQuestions);
 
         if (passageQuestions.length > 0) {
-          // Keep reading passage questions contiguous and insert at random valid position
           const insertIdx = Math.floor(Math.random() * (shuffledNonPassage.length + 1));
           shuffledNonPassage.splice(insertIdx, 0, ...passageQuestions);
         }
@@ -85,7 +81,6 @@ export function generateDynamicQuestions(questionsList, {
         orderedQuestions.push(...shuffledNonPassage);
       });
     } else {
-      // Global shuffle
       const passageQuestions = questionsList.filter((q) => q.hasPassage);
       const nonPassageQuestions = questionsList.filter((q) => !q.hasPassage);
       const shuffledNonPassage = shuffleArray(nonPassageQuestions);
@@ -97,29 +92,25 @@ export function generateDynamicQuestions(questionsList, {
       orderedQuestions = shuffledNonPassage;
     }
   } else {
+    // Preserve original paper sequence strictly
     orderedQuestions = [...questionsList];
   }
 
-  // Step 2: Shuffle option choices (A, B, C, D) for each question and re-map correctAnswer
+  // Step 2: Option choices (A, B, C, D)
   return orderedQuestions.map((q) => {
     if (!shuffleOptions || !q.options || q.options.length === 0) {
       return { ...q };
     }
 
-    // Capture original correct option text
     const originalCorrectIdx = getOptionIndex(q.correctAnswer);
     const correctOptionText = q.options[originalCorrectIdx] ?? q.options[0];
 
-    // Create option objects with text
     const mappedOptions = q.options.map((optText) => ({
       text: optText,
       isCorrect: optText === correctOptionText
     }));
 
-    // Shuffle options
     const shuffledMappedOptions = shuffleArray(mappedOptions);
-
-    // Find new position of correct answer
     const newCorrectIdx = shuffledMappedOptions.findIndex((opt) => opt.isCorrect);
     const newCorrectLetter = getOptionLetter(newCorrectIdx >= 0 ? newCorrectIdx : 0);
 
@@ -132,16 +123,10 @@ export function generateDynamicQuestions(questionsList, {
 }
 
 /**
- * Calculates detailed score and breakdowns based on DDCET examination rules.
+ * Calculates detailed score report adhering to EXAM_CONFIG rules (+2 correct, -0.5 wrong, 0 unattempted).
  * 
- * Rules:
- * - Correct: +2 Marks
- * - Wrong: -0.5 Marks
- * - Unattempted: 0 Marks
- * - Max Marks: totalQuestions * 2
- * 
- * @param {Array} questionsList - Array of question objects
- * @param {Object} selectedAnswers - Map of questionId to chosen option letter ("A" | "B" | "C" | "D")
+ * @param {Array} questionsList 
+ * @param {Object} selectedAnswers 
  * @returns {Object} Comprehensive calculation report
  */
 export function calculateScore(questionsList, selectedAnswers = {}) {
@@ -149,44 +134,51 @@ export function calculateScore(questionsList, selectedAnswers = {}) {
   let wrong = 0;
   let unattempted = 0;
 
-  // Track breakdown by Paper (BE-01, BE-02)
+  const correctWeight = EXAM_CONFIG.correctMarks; // +2
+  const wrongPenalty = Math.abs(EXAM_CONFIG.wrongMarks); // 0.5
+
   const paperScores = {
-    "BE-01": { total: 0, attempted: 0, correct: 0, wrong: 0, positive: 0, negative: 0, score: 0, maxScore: 0 },
-    "BE-02": { total: 0, attempted: 0, correct: 0, wrong: 0, positive: 0, negative: 0, score: 0, maxScore: 0 }
+    "BE-01": { name: "Basics of Science & Engineering", total: 0, attempted: 0, correct: 0, wrong: 0, positive: 0, negative: 0, score: 0, maxScore: 0, percentage: "0.0", accuracy: "0.0" },
+    "BE-02": { name: "Aptitude Test (Maths & English)", total: 0, attempted: 0, correct: 0, wrong: 0, positive: 0, negative: 0, score: 0, maxScore: 0, percentage: "0.0", accuracy: "0.0" }
   };
 
-  // Track breakdown by Subject
   const subjectScores = {};
 
   questionsList.forEach((q) => {
-    // Initialize subject accumulator if not present
     if (!subjectScores[q.subject]) {
       subjectScores[q.subject] = {
         subject: q.subject,
-        paper: q.paper,
+        paper: q.paper || "BE-01",
         total: 0,
         attempted: 0,
         correct: 0,
         wrong: 0,
+        unattempted: 0,
         positive: 0,
         negative: 0,
         score: 0,
-        maxScore: 0
+        maxScore: 0,
+        percentage: "0.0",
+        accuracy: "0.0"
       };
     }
 
     const currentPaper = paperScores[q.paper] || paperScores["BE-01"];
     const currentSubject = subjectScores[q.subject];
 
+    const qMarks = q.marks || correctWeight;
+    const qNeg = Math.abs(q.negativeMarks || wrongPenalty);
+
     currentPaper.total += 1;
-    currentPaper.maxScore += q.marks || 2;
+    currentPaper.maxScore += qMarks;
     currentSubject.total += 1;
-    currentSubject.maxScore += q.marks || 2;
+    currentSubject.maxScore += qMarks;
 
     const answer = selectedAnswers[q.id];
 
     if (answer === undefined || answer === null || answer === "") {
       unattempted += 1;
+      currentSubject.unattempted += 1;
     } else {
       currentPaper.attempted += 1;
       currentSubject.attempted += 1;
@@ -194,42 +186,47 @@ export function calculateScore(questionsList, selectedAnswers = {}) {
       if (answer.toUpperCase() === q.correctAnswer.toUpperCase()) {
         correct += 1;
         currentPaper.correct += 1;
-        currentPaper.positive += 2;
+        currentPaper.positive += qMarks;
         currentSubject.correct += 1;
-        currentSubject.positive += 2;
+        currentSubject.positive += qMarks;
       } else {
         wrong += 1;
         currentPaper.wrong += 1;
-        currentPaper.negative += 0.5;
+        currentPaper.negative += qNeg;
         currentSubject.wrong += 1;
-        currentSubject.negative += 0.5;
+        currentSubject.negative += qNeg;
       }
     }
   });
 
-  // Calculate net scores for paper and subjects
+  // Compute stats for paper breakdown
   Object.keys(paperScores).forEach((key) => {
     const p = paperScores[key];
-    p.score = Math.max(0, p.positive - p.negative);
+    p.score = Math.max(0, parseFloat((p.positive - p.negative).toFixed(2)));
     p.percentage = p.maxScore > 0 ? ((p.score / p.maxScore) * 100).toFixed(1) : "0.0";
+    p.accuracy = p.attempted > 0 ? ((p.correct / p.attempted) * 100).toFixed(1) : "0.0";
   });
 
+  // Compute stats for subject breakdown
   Object.keys(subjectScores).forEach((key) => {
     const s = subjectScores[key];
-    s.score = Math.max(0, s.positive - s.negative);
+    s.score = Math.max(0, parseFloat((s.positive - s.negative).toFixed(2)));
     s.percentage = s.maxScore > 0 ? ((s.score / s.maxScore) * 100).toFixed(1) : "0.0";
+    s.accuracy = s.attempted > 0 ? ((s.correct / s.attempted) * 100).toFixed(1) : "0.0";
   });
 
-  const positiveMarks = correct * 2;
-  const negativeMarks = wrong * 0.5;
-  const rawFinalScore = positiveMarks - negativeMarks;
-  const finalScore = Math.max(0, rawFinalScore); // Prevent negative total score
-  const maxPossibleMarks = questionsList.length * 2;
+  const attempted = correct + wrong;
+  const positiveMarks = Object.values(paperScores).reduce((acc, p) => acc + p.positive, 0);
+  const negativeMarks = Object.values(paperScores).reduce((acc, p) => acc + p.negative, 0);
+  const rawFinalScore = parseFloat((positiveMarks - negativeMarks).toFixed(2));
+  const finalScore = Math.max(0, rawFinalScore);
+  const maxPossibleMarks = questionsList.reduce((acc, q) => acc + (q.marks || correctWeight), 0);
   const percentage = maxPossibleMarks > 0 ? ((finalScore / maxPossibleMarks) * 100).toFixed(1) : "0.0";
+  const accuracy = attempted > 0 ? ((correct / attempted) * 100).toFixed(1) : "0.0";
 
   return {
     totalQuestions: questionsList.length,
-    attempted: correct + wrong,
+    attempted,
     unattempted,
     correct,
     wrong,
@@ -239,6 +236,7 @@ export function calculateScore(questionsList, selectedAnswers = {}) {
     rawFinalScore,
     maxPossibleMarks,
     percentage,
+    accuracy,
     paperScores,
     subjectScores
   };
@@ -250,10 +248,10 @@ export function calculateScore(questionsList, selectedAnswers = {}) {
  * @returns {string} e.g. "02:29:45"
  */
 export function formatTime(totalSeconds) {
-  if (totalSeconds < 0) totalSeconds = 0;
+  if (!totalSeconds || totalSeconds < 0) totalSeconds = 0;
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const seconds = totalSeconds % 60;
+  const seconds = Math.floor(totalSeconds % 60);
 
   const pad = (num) => String(num).padStart(2, "0");
   return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;

@@ -8,8 +8,8 @@ import SubmitModal from "../components/SubmitModal";
 /**
  * Quiz Page Component
  * 
- * Supports two-column layout on desktop and fluid single-column with
- * quick-access mobile Question Palette drawer on mobile devices.
+ * Main exam/practice view with question card, navigation buttons, question palette,
+ * timer, and submit confirmation modal.
  */
 export default function Quiz({
   questions,
@@ -34,7 +34,7 @@ export default function Quiz({
   const selectedAnswer = currentQuestion ? selectedAnswers[currentQuestion.id] : null;
   const isMarked = currentQuestion ? !!markedQuestions[currentQuestion.id] : false;
 
-  // Counts for modal confirmation
+  // Attempt counts for modal summary
   let attemptedCount = 0;
   let markedCount = 0;
   questions.forEach((q) => {
@@ -81,7 +81,7 @@ export default function Quiz({
             📋 Palette ({currentIndex + 1}/{questions.length})
           </button>
 
-          {/* Real Countdown Timer (Full Mock Test Mode) */}
+          {/* Real Countdown Timer (Shown in Exam Modes) */}
           {!isPracticeMode && (
             <Timer timeRemaining={timeRemaining} />
           )}
@@ -116,7 +116,7 @@ export default function Quiz({
           </div>
         </div>
 
-        {/* Right Column: Question Navigator (Desktop persistent & Mobile drawer) */}
+        {/* Right Column: Question Navigator */}
         <div className="quiz-side-column">
           <QuestionNavigator
             questions={questions}
@@ -143,4 +143,3 @@ export default function Quiz({
     </div>
   );
 }
-

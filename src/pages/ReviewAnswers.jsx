@@ -1,30 +1,31 @@
 import React, { useState } from "react";
 import { getOptionLetter } from "../utils/quizUtils";
 import { READING_PASSAGE } from "../data/questions";
+import { StructuredExplanation } from "../components/QuestionCard";
 
 /**
- * ReviewAnswers Component
- * 
- * Displays detailed question-by-question review with official keys,
- * filterable by attempt status and optimized for mobile screens.
+ * ReviewAnswers Component - Bookmark Redesign
  */
 export default function ReviewAnswers({
   questions,
   selectedAnswers,
+  markedQuestions = {},
   onBackToResult,
   onBackToHome
 }) {
-  const [filterType, setFilterType] = useState("ALL"); // 'ALL' | 'CORRECT' | 'WRONG' | 'UNATTEMPTED'
+  const [filterType, setFilterType] = useState("ALL"); // 'ALL' | 'CORRECT' | 'WRONG' | 'UNATTEMPTED' | 'MARKED'
 
-  // Filter questions based on student attempt status
+  // Filter questions based on attempt state
   const filteredQuestions = questions.filter((q) => {
     const selected = selectedAnswers[q.id];
     const isAnswered = selected !== undefined && selected !== null && selected !== "";
     const isCorrect = isAnswered && selected.toUpperCase() === q.correctAnswer.toUpperCase();
+    const isMarked = !!markedQuestions[q.id];
 
     if (filterType === "CORRECT") return isCorrect;
     if (filterType === "WRONG") return isAnswered && !isCorrect;
     if (filterType === "UNATTEMPTED") return !isAnswered;
+    if (filterType === "MARKED") return isMarked;
     return true; // "ALL"
   });
 
@@ -34,10 +35,10 @@ export default function ReviewAnswers({
       <div className="review-header-bar">
         <div>
           <h2 className="review-title">
-            🔍 Detailed Answer Review
+            🔍 Answer Review & Educational Solutions
           </h2>
           <p className="review-subtitle">
-            Review every question with your choice vs official exam key.
+            Review every question with step-by-step reasoning, formula substitution, and option breakdown.
           </p>
         </div>
 
@@ -54,16 +55,16 @@ export default function ReviewAnswers({
             className="btn btn-primary btn-sm"
             onClick={onBackToHome}
           >
-            🏠 Home
+            🏠 Dashboard
           </button>
         </div>
       </div>
 
-      {/* Filter Options Bar */}
+      {/* Filter Tabs Bar */}
       <div className="review-filter-bar">
         <button
           type="button"
-          className={`btn btn-sm ${filterType === "ALL" ? "btn-primary" : "btn-secondary"}`}
+          className={`btn btn-sm ${filterType === "ALL" ? "btn-primary" : "btn-tertiary"}`}
           onClick={() => setFilterType("ALL")}
         >
           All ({questions.length})
@@ -71,45 +72,54 @@ export default function ReviewAnswers({
 
         <button
           type="button"
-          className={`btn btn-sm ${filterType === "CORRECT" ? "btn-primary" : "btn-secondary"}`}
+          className={`btn btn-sm ${filterType === "CORRECT" ? "btn-primary" : "btn-tertiary"}`}
           onClick={() => setFilterType("CORRECT")}
         >
-          ✅ Correct Only
+          ✅ Correct
         </button>
 
         <button
           type="button"
-          className={`btn btn-sm ${filterType === "WRONG" ? "btn-primary" : "btn-secondary"}`}
+          className={`btn btn-sm ${filterType === "WRONG" ? "btn-primary" : "btn-tertiary"}`}
           onClick={() => setFilterType("WRONG")}
         >
-          ❌ Incorrect Only
+          ❌ Incorrect
         </button>
 
         <button
           type="button"
-          className={`btn btn-sm ${filterType === "UNATTEMPTED" ? "btn-primary" : "btn-secondary"}`}
+          className={`btn btn-sm ${filterType === "UNATTEMPTED" ? "btn-primary" : "btn-tertiary"}`}
           onClick={() => setFilterType("UNATTEMPTED")}
         >
           ⚪ Unattempted
         </button>
+
+        <button
+          type="button"
+          className={`btn btn-sm ${filterType === "MARKED" ? "btn-primary" : "btn-tertiary"}`}
+          onClick={() => setFilterType("MARKED")}
+        >
+          ★ Marked
+        </button>
       </div>
 
-      {/* Empty State */}
+      {/* Empty Filter State */}
       {filteredQuestions.length === 0 && (
         <div className="review-empty-state">
-          <h3>No questions found in this category.</h3>
+          <h3>No questions match the selected filter.</h3>
           <p style={{ color: "var(--text-muted)", marginTop: "0.5rem" }}>
-            Try selecting a different filter above.
+            Select another filter tab above to view your questions.
           </p>
         </div>
       )}
 
-      {/* Array.map() rendering each reviewed question card */}
+      {/* Question Cards List */}
       <div className="review-list">
         {filteredQuestions.map((q, displayIdx) => {
           const selected = selectedAnswers[q.id];
           const isAnswered = selected !== undefined && selected !== null && selected !== "";
           const isCorrect = isAnswered && selected.toUpperCase() === q.correctAnswer.toUpperCase();
+          const isMarked = !!markedQuestions[q.id];
 
           let cardBorderClass = "unattempted-border";
           let badgeElement = (
@@ -123,14 +133,14 @@ export default function ReviewAnswers({
               cardBorderClass = "correct-border";
               badgeElement = (
                 <span className="review-status-badge review-status-correct">
-                  ✅ Correct (+2.0 Marks)
+                  ✅ Correct (+{q.marks || 2}.0 Marks)
                 </span>
               );
             } else {
               cardBorderClass = "wrong-border";
               badgeElement = (
                 <span className="review-status-badge review-status-wrong">
-                  ❌ Incorrect (-0.5 Marks)
+                  ❌ Incorrect (-{Math.abs(q.negativeMarks || 0.5)} Marks)
                 </span>
               );
             }
@@ -142,12 +152,13 @@ export default function ReviewAnswers({
                 <div className="review-badge-group">
                   <span className="tag-badge tag-paper">{q.paper}</span>
                   <span className="tag-badge tag-subject">{q.subject}</span>
+                  {isMarked && <span className="tag-badge tag-marked">★ Marked for Review</span>}
                   <span className="review-q-num">Q. {displayIdx + 1}</span>
                 </div>
                 {badgeElement}
               </div>
 
-              {/* Reading Comprehension Passage */}
+              {/* Reading Passage */}
               {q.hasPassage && (
                 <div className="passage-box" style={{ fontSize: "0.85rem" }}>
                   <span className="passage-title">📖 Reading Comprehension Passage:</span>
@@ -159,7 +170,7 @@ export default function ReviewAnswers({
                 {q.question}
               </div>
 
-              {/* Options list showing user selection vs correct answer */}
+              {/* Options list */}
               <div className="options-list" style={{ gap: "0.5rem" }}>
                 {q.options.map((optText, optIdx) => {
                   const letter = getOptionLetter(optIdx);
@@ -173,7 +184,7 @@ export default function ReviewAnswers({
                     styleClass = "feedback-correct";
                     statusTag = (
                       <span className="review-opt-tag review-opt-tag-correct">
-                        Official Key
+                        Official Answer
                       </span>
                     );
                   } else if (isUserSelection && !isCorrect) {
@@ -198,12 +209,15 @@ export default function ReviewAnswers({
                   );
                 })}
               </div>
+
+              {/* Reusable Structured Solution */}
+              <StructuredExplanation question={q} />
             </div>
           );
         })}
       </div>
 
-      {/* Bottom Floating Navigation */}
+      {/* Bottom Navigation */}
       <div className="review-bottom-actions">
         <button
           type="button"
@@ -223,4 +237,3 @@ export default function ReviewAnswers({
     </div>
   );
 }
-

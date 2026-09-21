@@ -3,11 +3,7 @@ import React from "react";
 /**
  * Option Component
  * 
- * Demonstrates:
- * - Functional component
- * - Props passing (letter, text, isSelected, onClick, feedback)
- * - Event handling (onClick)
- * - Conditional styling (selected / feedback state)
+ * Accessible, touch-optimized option choice button with instant feedback support.
  */
 export default function Option({
   letter,
@@ -34,3 +30,4 @@ export default function Option({
     </button>
   );
 }
+

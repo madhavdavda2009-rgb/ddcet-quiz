@@ -5,12 +5,8 @@ import { READING_PASSAGE } from "../data/questions";
 /**
  * ReviewAnswers Component
  * 
- * Demonstrates:
- * - Functional Component
- * - useState for filtering review questions (All, Correct, Incorrect, Unattempted)
- * - Array.filter() and Array.map()
- * - Conditional Rendering for question borders and status badges
- * - Props passing
+ * Displays detailed question-by-question review with official keys,
+ * filterable by attempt status and optimized for mobile screens.
  */
 export default function ReviewAnswers({
   questions,
@@ -35,23 +31,23 @@ export default function ReviewAnswers({
   return (
     <div className="review-container">
       {/* Review Header */}
-      <div className="quiz-header-bar" style={{ marginBottom: "1.5rem" }}>
+      <div className="review-header-bar">
         <div>
-          <h2 style={{ fontFamily: "var(--font-heading)", fontSize: "1.4rem", fontWeight: "700" }}>
+          <h2 className="review-title">
             🔍 Detailed Answer Review
           </h2>
-          <p style={{ color: "var(--text-muted)", fontSize: "0.85rem" }}>
-            Review every question with chosen answer vs official key.
+          <p className="review-subtitle">
+            Review every question with your choice vs official exam key.
           </p>
         </div>
 
-        <div style={{ display: "flex", gap: "0.5rem" }}>
+        <div className="review-nav-actions">
           <button
             type="button"
             className="btn btn-secondary btn-sm"
             onClick={onBackToResult}
           >
-            ← Back to Scorecard
+            ← Scorecard
           </button>
           <button
             type="button"
@@ -63,23 +59,14 @@ export default function ReviewAnswers({
         </div>
       </div>
 
-      {/* Filter Options */}
-      <div style={{
-        display: "flex",
-        gap: "0.5rem",
-        marginBottom: "1.5rem",
-        flexWrap: "wrap",
-        background: "#ffffff",
-        padding: "0.75rem",
-        borderRadius: "var(--radius-md)",
-        border: "1px solid var(--border)"
-      }}>
+      {/* Filter Options Bar */}
+      <div className="review-filter-bar">
         <button
           type="button"
           className={`btn btn-sm ${filterType === "ALL" ? "btn-primary" : "btn-secondary"}`}
           onClick={() => setFilterType("ALL")}
         >
-          All Questions ({questions.length})
+          All ({questions.length})
         </button>
 
         <button
@@ -103,19 +90,13 @@ export default function ReviewAnswers({
           className={`btn btn-sm ${filterType === "UNATTEMPTED" ? "btn-primary" : "btn-secondary"}`}
           onClick={() => setFilterType("UNATTEMPTED")}
         >
-          ⚪ Unattempted Only
+          ⚪ Unattempted
         </button>
       </div>
 
       {/* Empty State */}
       {filteredQuestions.length === 0 && (
-        <div style={{
-          background: "#ffffff",
-          padding: "3rem",
-          textAlign: "center",
-          borderRadius: "var(--radius-lg)",
-          border: "1px solid var(--border)"
-        }}>
+        <div className="review-empty-state">
           <h3>No questions found in this category.</h3>
           <p style={{ color: "var(--text-muted)", marginTop: "0.5rem" }}>
             Try selecting a different filter above.
@@ -125,7 +106,7 @@ export default function ReviewAnswers({
 
       {/* Array.map() rendering each reviewed question card */}
       <div className="review-list">
-        {filteredQuestions.map((q) => {
+        {filteredQuestions.map((q, displayIdx) => {
           const selected = selectedAnswers[q.id];
           const isAnswered = selected !== undefined && selected !== null && selected !== "";
           const isCorrect = isAnswered && selected.toUpperCase() === q.correctAnswer.toUpperCase();
@@ -133,7 +114,7 @@ export default function ReviewAnswers({
           let cardBorderClass = "unattempted-border";
           let badgeElement = (
             <span className="review-status-badge review-status-unattempted">
-              ⚪ Not Attempted (0 Marks)
+              ⚪ Unattempted (0 Marks)
             </span>
           );
 
@@ -157,24 +138,24 @@ export default function ReviewAnswers({
 
           return (
             <div key={q.id} className={`review-card ${cardBorderClass}`}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.5rem" }}>
-                <div>
-                  <span className="tag-badge tag-paper" style={{ marginRight: "0.4rem" }}>{q.paper}</span>
+              <div className="review-card-header">
+                <div className="review-badge-group">
+                  <span className="tag-badge tag-paper">{q.paper}</span>
                   <span className="tag-badge tag-subject">{q.subject}</span>
-                  <span style={{ marginLeft: "0.5rem", fontWeight: "700" }}>Question {q.id}</span>
+                  <span className="review-q-num">Q. {displayIdx + 1}</span>
                 </div>
                 {badgeElement}
               </div>
 
-              {/* Conditional passage */}
+              {/* Reading Comprehension Passage */}
               {q.hasPassage && (
                 <div className="passage-box" style={{ fontSize: "0.85rem" }}>
-                  <span className="passage-title">📖 Reading Comprehension Passage (Q.76 to Q.80):</span>
+                  <span className="passage-title">📖 Reading Comprehension Passage:</span>
                   <p>{READING_PASSAGE.text}</p>
                 </div>
               )}
 
-              <div style={{ fontSize: "1.05rem", fontWeight: "600" }}>
+              <div className="question-text" style={{ fontSize: "1.05rem" }}>
                 {q.question}
               </div>
 
@@ -190,10 +171,18 @@ export default function ReviewAnswers({
 
                   if (isCorrectAnswer) {
                     styleClass = "feedback-correct";
-                    statusTag = <span style={{ marginLeft: "auto", fontSize: "0.8rem", fontWeight: "700", color: "var(--success)" }}>Official Key</span>;
+                    statusTag = (
+                      <span className="review-opt-tag review-opt-tag-correct">
+                        Official Key
+                      </span>
+                    );
                   } else if (isUserSelection && !isCorrect) {
                     styleClass = "feedback-wrong";
-                    statusTag = <span style={{ marginLeft: "auto", fontSize: "0.8rem", fontWeight: "700", color: "var(--danger)" }}>Your Choice</span>;
+                    statusTag = (
+                      <span className="review-opt-tag review-opt-tag-wrong">
+                        Your Choice
+                      </span>
+                    );
                   }
 
                   return (
@@ -203,7 +192,7 @@ export default function ReviewAnswers({
                       style={{ cursor: "default", pointerEvents: "none" }}
                     >
                       <span className="option-letter">{letter}</span>
-                      <span>{optText}</span>
+                      <span className="option-text">{optText}</span>
                       {statusTag}
                     </div>
                   );
@@ -215,22 +204,23 @@ export default function ReviewAnswers({
       </div>
 
       {/* Bottom Floating Navigation */}
-      <div style={{ display: "flex", justifyContent: "center", gap: "1rem", marginTop: "2rem" }}>
+      <div className="review-bottom-actions">
         <button
           type="button"
-          className="btn btn-secondary btn-lg"
+          className="btn btn-secondary btn-lg review-bottom-btn"
           onClick={onBackToResult}
         >
           ← Return to Scorecard
         </button>
         <button
           type="button"
-          className="btn btn-primary btn-lg"
+          className="btn btn-primary btn-lg review-bottom-btn"
           onClick={onBackToHome}
         >
-          🏠 Return to Home Dashboard
+          🏠 Return to Dashboard
         </button>
       </div>
     </div>
   );
 }
+

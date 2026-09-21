@@ -3,19 +3,17 @@ import React, { useState } from "react";
 /**
  * QuestionNavigator Component
  * 
- * Demonstrates:
- * - useState for internal filter tab state
- * - Array.map() for dynamic palette buttons
- * - Array.filter() for subject filtering
- * - Conditional styling / class names based on question state
- * - Event handling for jumping directly to any question
+ * Renders the question palette grid, filter tabs, live stats,
+ * and supports responsive desktop sidebar and mobile slide-in drawer.
  */
 export default function QuestionNavigator({
   questions,
   currentIndex,
   selectedAnswers,
   markedQuestions,
-  onSelectQuestion
+  onSelectQuestion,
+  isMobileDrawerOpen = false,
+  onCloseMobile
 }) {
   const [selectedSubjectFilter, setSelectedSubjectFilter] = useState("ALL");
 
@@ -38,10 +36,29 @@ export default function QuestionNavigator({
   // Extract unique subjects for filtering
   const subjects = ["ALL", ...new Set(questions.map((q) => q.subject))];
 
-  return (
-    <div className="navigator-panel">
+  const handleQuestionClick = (idx) => {
+    onSelectQuestion(idx);
+    if (onCloseMobile) {
+      onCloseMobile();
+    }
+  };
+
+  const content = (
+    <div className="navigator-panel-inner">
       <div className="navigator-header">
-        <h3>Question Navigator</h3>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <h3>Question Palette</h3>
+          {onCloseMobile && (
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm mobile-close-drawer-btn"
+              onClick={onCloseMobile}
+              aria-label="Close question palette"
+            >
+              ✕ Close
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Legend / Stats Summary */}
@@ -64,26 +81,27 @@ export default function QuestionNavigator({
         </div>
       </div>
 
-      {/* Subject Filter Tabs (Useful for navigating 100 questions easily) */}
+      {/* Subject Filter Tabs */}
       {subjects.length > 2 && (
-        <div className="filter-tabs">
-          {subjects.map((sub) => (
-            <button
-              key={sub}
-              type="button"
-              className={`filter-tab-btn ${selectedSubjectFilter === sub ? "active" : ""}`}
-              onClick={() => setSelectedSubjectFilter(sub)}
-            >
-              {sub}
-            </button>
-          ))}
+        <div className="filter-tabs-container">
+          <div className="filter-tabs">
+            {subjects.map((sub) => (
+              <button
+                key={sub}
+                type="button"
+                className={`filter-tab-btn ${selectedSubjectFilter === sub ? "active" : ""}`}
+                onClick={() => setSelectedSubjectFilter(sub)}
+              >
+                {sub}
+              </button>
+            ))}
+          </div>
         </div>
       )}
 
-      {/* Array.map() for rendering question buttons */}
+      {/* Question Grid */}
       <div className="question-grid">
         {questions.map((q, idx) => {
-          // If subject filter is applied, dim or skip
           if (selectedSubjectFilter !== "ALL" && q.subject !== selectedSubjectFilter) {
             return null;
           }
@@ -110,7 +128,7 @@ export default function QuestionNavigator({
               key={q.id}
               type="button"
               className={`grid-btn ${stateClass}`}
-              onClick={() => onSelectQuestion(idx)}
+              onClick={() => handleQuestionClick(idx)}
               title={`Question ${idx + 1} (${q.subject})`}
               aria-label={`Go to Question ${idx + 1}`}
             >
@@ -121,4 +139,23 @@ export default function QuestionNavigator({
       </div>
     </div>
   );
+
+  return (
+    <>
+      {/* Desktop Persistent Sidebar */}
+      <aside className="navigator-panel desktop-navigator" aria-label="Question Navigator">
+        {content}
+      </aside>
+
+      {/* Mobile Modal / Drawer */}
+      {isMobileDrawerOpen && (
+        <div className="mobile-drawer-backdrop" onClick={onCloseMobile} role="dialog" aria-modal="true">
+          <div className="mobile-drawer-card" onClick={(e) => e.stopPropagation()}>
+            {content}
+          </div>
+        </div>
+      )}
+    </>
+  );
 }
+

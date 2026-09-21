@@ -3,10 +3,7 @@ import React from "react";
 /**
  * SubmitModal Component
  * 
- * Demonstrates:
- * - Conditional Rendering
- * - Props passing
- * - Event handling (Confirm / Cancel)
+ * Submission confirmation modal with attempt summary metrics and mobile-optimized buttons.
  */
 export default function SubmitModal({
   isOpen,
@@ -20,14 +17,14 @@ export default function SubmitModal({
   if (!isOpen) return null;
 
   return (
-    <div className="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-      <div className="modal-card">
+    <div className="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-title" onClick={onClose}>
+      <div className="modal-card" onClick={(e) => e.stopPropagation()}>
         <h3 id="modal-title" className="modal-title">
           Are you sure you want to submit?
         </h3>
         
-        <p style={{ color: "var(--text-muted)", fontSize: "0.95rem" }}>
-          Please review your attempt summary before final submission. Once submitted, your scores will be calculated.
+        <p className="modal-description">
+          Please review your attempt summary before final submission. Once submitted, your score and detailed performance analytics will be calculated.
         </p>
 
         <div className="modal-summary-grid">
@@ -48,20 +45,21 @@ export default function SubmitModal({
         <div className="modal-actions">
           <button
             type="button"
-            className="btn btn-secondary"
+            className="btn btn-secondary modal-btn"
             onClick={onClose}
           >
             Cancel & Return
           </button>
           <button
             type="button"
-            className="btn btn-success"
+            className="btn btn-success modal-btn"
             onClick={onConfirm}
           >
-            Yes, Submit Test
+            Yes, Submit Test ➔
           </button>
         </div>
       </div>
     </div>
   );
 }
+

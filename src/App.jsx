@@ -6,26 +6,19 @@ import Quiz from "./pages/Quiz";
 import Result from "./pages/Result";
 import ReviewAnswers from "./pages/ReviewAnswers";
 import { questions as allQuestions } from "./data/questions";
-import { calculateScore } from "./utils/quizUtils";
+import { calculateScore, generateDynamicQuestions } from "./utils/quizUtils";
 
 /**
  * Main Application Component: DDCET Practice Quiz
- * 
- * CORE REACT CONCEPTS DEMONSTRATED FOR VIVA:
- * 1. Components: Modular structure (Navbar, Home, Instructions, Quiz, Result, ReviewAnswers)
- * 2. Props: Clean top-down data flow and event handler callbacks
- * 3. useState: Manages screens, active questions, current index, answers, bookmarks, and timer
- * 4. Events: Handlers for user interactions (clicks, keyboard navigation, submissions)
- * 5. Array.map(): Dynamic generation of question grids, options, subjects, and analytics
- * 6. Conditional Rendering: Clean screen transitions based on state
- * 7. useEffect: Real countdown timer with automatic cleanup and auto-submission
  */
 export default function App() {
   // Screen routing state: 'HOME' | 'INSTRUCTIONS' | 'QUIZ' | 'RESULT' | 'REVIEW'
   const [currentScreen, setCurrentScreen] = useState("HOME");
 
   // Active question set (full 100 or subject-filtered subset)
-  const [activeQuestions, setActiveQuestions] = useState(allQuestions);
+  const [activeQuestions, setActiveQuestions] = useState(() =>
+    generateDynamicQuestions(allQuestions, { shuffleQuestions: true, shuffleOptions: true, preserveSections: true })
+  );
   const [currentIndex, setCurrentIndex] = useState(0);
 
   // User Quiz responses & bookmark states
@@ -74,19 +67,33 @@ export default function App() {
   // NAVIGATION & ACTION HANDLERS
   // ==========================================
 
-  // Start Full 100 Question Mock Test
+  // Start Full 100 Question Mock Test (Generates new dynamic questions)
   const handleStartFullMock = () => {
-    setActiveQuestions(allQuestions);
+    const dynamicSet = generateDynamicQuestions(allQuestions, {
+      shuffleQuestions: true,
+      shuffleOptions: true,
+      preserveSections: true
+    });
+    setActiveQuestions(dynamicSet);
     setIsPracticeMode(false);
     setModeTitle("Full Mock Test (100 Qs)");
     setSelectedSubjectName(null);
+    setSelectedAnswers({});
+    setMarkedQuestions({});
+    setCurrentIndex(0);
+    setTimeRemaining(9000);
     setCurrentScreen("INSTRUCTIONS");
   };
 
-  // Start Subject-wise Practice (Mode B)
+  // Start Subject-wise Practice (Mode B - Generates new dynamic questions)
   const handleStartSubjectPractice = (subjectName) => {
     const filtered = allQuestions.filter((q) => q.subject === subjectName);
-    setActiveQuestions(filtered);
+    const dynamicSet = generateDynamicQuestions(filtered, {
+      shuffleQuestions: true,
+      shuffleOptions: true,
+      preserveSections: false
+    });
+    setActiveQuestions(dynamicSet);
     setIsPracticeMode(true);
     setModeTitle(`Practice: ${subjectName}`);
     setSelectedSubjectName(subjectName);
@@ -167,8 +174,25 @@ export default function App() {
     setCurrentScreen("RESULT");
   };
 
-  // Retry test with clean state
+  // Retry test with fresh dynamic questions
   const handleRetryTest = () => {
+    let dynamicSet = [];
+    if (isPracticeMode && selectedSubjectName) {
+      const filtered = allQuestions.filter((q) => q.subject === selectedSubjectName);
+      dynamicSet = generateDynamicQuestions(filtered, {
+        shuffleQuestions: true,
+        shuffleOptions: true,
+        preserveSections: false
+      });
+    } else {
+      dynamicSet = generateDynamicQuestions(allQuestions, {
+        shuffleQuestions: true,
+        shuffleOptions: true,
+        preserveSections: true
+      });
+    }
+
+    setActiveQuestions(dynamicSet);
     setSelectedAnswers({});
     setMarkedQuestions({});
     setCurrentIndex(0);

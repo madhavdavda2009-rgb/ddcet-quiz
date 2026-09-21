@@ -8,12 +8,8 @@ import SubmitModal from "../components/SubmitModal";
 /**
  * Quiz Page Component
  * 
- * Demonstrates:
- * - Functional Component
- * - useState for modal management
- * - Multiple reusable child components (Timer, QuestionCard, QuestionNavigator, NavigationButtons)
- * - Props passing
- * - Conditional Rendering (SubmitModal, Timer display based on mode)
+ * Supports two-column layout on desktop and fluid single-column with
+ * quick-access mobile Question Palette drawer on mobile devices.
  */
 export default function Quiz({
   questions,
@@ -32,6 +28,7 @@ export default function Quiz({
   onSubmitTest
 }) {
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
+  const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
 
   const currentQuestion = questions[currentIndex];
   const selectedAnswer = currentQuestion ? selectedAnswers[currentQuestion.id] : null;
@@ -63,18 +60,32 @@ export default function Quiz({
     <div className="quiz-container">
       {/* Top Header Bar */}
       <div className="quiz-header-bar">
-        <div className="quiz-badge-group">
-          <span className="tag-badge tag-paper">{currentQuestion?.paper || "DDCET"}</span>
-          <span className="tag-badge tag-subject">{currentQuestion?.subject || "Practice"}</span>
-          <span className="tag-progress">
-            Q. {currentIndex + 1} / {questions.length} ({modeTitle})
-          </span>
+        <div className="quiz-header-left">
+          <div className="quiz-badge-group">
+            <span className="tag-badge tag-paper">{currentQuestion?.paper || "DDCET"}</span>
+            <span className="tag-badge tag-subject">{currentQuestion?.subject || "Practice"}</span>
+            <span className="tag-progress">
+              Q. {currentIndex + 1} / {questions.length}
+            </span>
+          </div>
         </div>
 
-        {/* Real Countdown Timer (Full Mock Test Mode) */}
-        {!isPracticeMode && (
-          <Timer timeRemaining={timeRemaining} />
-        )}
+        <div className="quiz-header-right">
+          {/* Mobile Quick-access Palette Button */}
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm mobile-palette-btn"
+            onClick={() => setIsMobileDrawerOpen(true)}
+            aria-label="Open question navigator palette"
+          >
+            📋 Palette ({currentIndex + 1}/{questions.length})
+          </button>
+
+          {/* Real Countdown Timer (Full Mock Test Mode) */}
+          {!isPracticeMode && (
+            <Timer timeRemaining={timeRemaining} />
+          )}
+        </div>
       </div>
 
       {/* Main Two-Column Layout */}
@@ -90,7 +101,7 @@ export default function Quiz({
             isPracticeMode={isPracticeMode}
           />
 
-          <div style={{ marginTop: "1.25rem" }}>
+          <div className="quiz-navigation-wrapper">
             <NavigationButtons
               currentIndex={currentIndex}
               totalQuestions={questions.length}
@@ -105,7 +116,7 @@ export default function Quiz({
           </div>
         </div>
 
-        {/* Right Column: Question Navigator */}
+        {/* Right Column: Question Navigator (Desktop persistent & Mobile drawer) */}
         <div className="quiz-side-column">
           <QuestionNavigator
             questions={questions}
@@ -113,6 +124,8 @@ export default function Quiz({
             selectedAnswers={selectedAnswers}
             markedQuestions={markedQuestions}
             onSelectQuestion={onSelectQuestion}
+            isMobileDrawerOpen={isMobileDrawerOpen}
+            onCloseMobile={() => setIsMobileDrawerOpen(false)}
           />
         </div>
       </div>
@@ -130,3 +143,4 @@ export default function Quiz({
     </div>
   );
 }
+

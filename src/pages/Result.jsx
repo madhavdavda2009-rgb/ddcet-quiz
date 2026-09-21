@@ -3,12 +3,7 @@ import React from "react";
 /**
  * Result Page Component
  * 
- * Demonstrates:
- * - Functional Component
- * - Props passing (scoreReport, questions, onReview, onRetry, onHome)
- * - Array.map() for rendering subject performance bars
- * - Conditional Rendering
- * - Event handling
+ * Scorecard and performance analytics with mobile-first responsive layout.
  */
 export default function Result({
   scoreReport,
@@ -43,8 +38,8 @@ export default function Result({
         <div className="result-header">
           <span className="college-badge">Exam Performance Report • {modeTitle}</span>
           <h2>DDCET Practice Result</h2>
-          <p style={{ color: "var(--text-muted)", fontSize: "0.95rem", marginTop: "0.35rem" }}>
-            Comprehensive performance breakdown calculated under DDCET scoring rules (+2 correct, -0.5 wrong).
+          <p className="result-header-sub">
+            Comprehensive performance breakdown calculated under official DDCET rules (+2 correct, -0.5 wrong).
           </p>
         </div>
 
@@ -53,7 +48,7 @@ export default function Result({
           <div className="score-circle" style={{ background: scoreBadgeColor }}>
             <span className="score-circle-number">{finalScore}</span>
             <span className="score-circle-total">/ {maxPossibleMarks}</span>
-            <span style={{ fontSize: "0.8rem", opacity: 0.9 }}>({percentage}%)</span>
+            <span className="score-circle-pct">({percentage}%)</span>
           </div>
 
           {/* Grid of Key Score Metrics */}
@@ -82,28 +77,28 @@ export default function Result({
 
         {/* Section Paper Breakdown (BE-01 and BE-02) */}
         {paperScores && (
-          <div style={{ marginTop: "2rem" }}>
+          <div className="result-section">
             <h3 className="section-title">📑 Paper-wise Performance</h3>
             <div className="paper-breakdown-grid">
               <div className="paper-card">
                 <h4>Section 01: Paper BE-01 (Science & Engg)</h4>
-                <p style={{ color: "var(--text-muted)", fontSize: "0.85rem", marginBottom: "0.75rem" }}>
+                <p className="paper-card-sub">
                   Physics, Chemistry, Computer Practice, Environmental Science
                 </p>
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.9rem", fontWeight: "600" }}>
-                  <span>Score: {paperScores["BE-01"]?.score} / {paperScores["BE-01"]?.maxScore}</span>
-                  <span>Correct: {paperScores["BE-01"]?.correct} | Wrong: {paperScores["BE-01"]?.wrong}</span>
+                <div className="paper-score-row">
+                  <span>Score: <strong>{paperScores["BE-01"]?.score} / {paperScores["BE-01"]?.maxScore}</strong></span>
+                  <span>Correct: <strong>{paperScores["BE-01"]?.correct}</strong> | Wrong: <strong>{paperScores["BE-01"]?.wrong}</strong></span>
                 </div>
               </div>
 
               <div className="paper-card">
                 <h4>Section 02: Paper BE-02 (Aptitude Test)</h4>
-                <p style={{ color: "var(--text-muted)", fontSize: "0.85rem", marginBottom: "0.75rem" }}>
+                <p className="paper-card-sub">
                   Mathematics, English Language / Soft Skills
                 </p>
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.9rem", fontWeight: "600" }}>
-                  <span>Score: {paperScores["BE-02"]?.score} / {paperScores["BE-02"]?.maxScore}</span>
-                  <span>Correct: {paperScores["BE-02"]?.correct} | Wrong: {paperScores["BE-02"]?.wrong}</span>
+                <div className="paper-score-row">
+                  <span>Score: <strong>{paperScores["BE-02"]?.score} / {paperScores["BE-02"]?.maxScore}</strong></span>
+                  <span>Correct: <strong>{paperScores["BE-02"]?.correct}</strong> | Wrong: <strong>{paperScores["BE-02"]?.wrong}</strong></span>
                 </div>
               </div>
             </div>
@@ -111,7 +106,7 @@ export default function Result({
         )}
 
         {/* Subject-Wise Performance Progress Bars */}
-        <div style={{ marginTop: "1rem" }}>
+        <div className="result-section">
           <h3 className="section-title">📊 Subject-wise Breakdown</h3>
           <div className="subject-performance-list">
             {Object.keys(subjectScores).map((subjectKey) => {
@@ -140,17 +135,10 @@ export default function Result({
         </div>
 
         {/* Action Buttons */}
-        <div style={{
-          display: "flex",
-          justifyContent: "center",
-          gap: "1rem",
-          flexWrap: "wrap",
-          paddingTop: "1.5rem",
-          borderTop: "1px solid var(--border)"
-        }}>
+        <div className="result-actions">
           <button
             type="button"
-            className="btn btn-primary btn-lg"
+            className="btn btn-primary btn-lg result-btn"
             onClick={onReview}
           >
             🔍 Review Answers & Explanations
@@ -158,15 +146,15 @@ export default function Result({
 
           <button
             type="button"
-            className="btn btn-secondary btn-lg"
+            className="btn btn-secondary btn-lg result-btn"
             onClick={onRetry}
           >
-            🔄 Retry Test
+            🔄 Retry Test (New Shuffled Qs)
           </button>
 
           <button
             type="button"
-            className="btn btn-secondary btn-lg"
+            className="btn btn-secondary btn-lg result-btn"
             onClick={onHome}
           >
             🏠 Back to Dashboard
@@ -176,3 +164,4 @@ export default function Result({
     </div>
   );
 }
+
